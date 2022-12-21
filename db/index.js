@@ -1,6 +1,10 @@
 const {Client} = require('pg');
 const client = new Client('postgres://localhost:5432/juicebox-dev2');
 
+
+// ***************** Below is all Users functions *********************
+
+
 // this function gets all users from the users table in the DB
 const getAllUsers = async () => {
     try {
@@ -170,6 +174,37 @@ const getPostsByUser = async (userId) => {
 };
 
 
+// ***************** Below is all Tags functions *********************
+// i think tagList will be an array of strings with the tagnames 
+const createTags = async (tagList) => {
+    console.log('this is our taglist ==> ',tagList);
+
+    if (tagList.length === 0) {
+        return;
+    }
+    
+    // const insertValues = tagList.map(
+    //     (tag, index) => `$${index + 1}`).join('), (');
+
+    try {
+        const {rows: newTags} = await client.query(`
+        INSERT INTO tags(name)
+        VALUES ($1), ($2), ($3)
+        ON CONFLICT (name) DO NOTHING
+        RETURNING *;
+        `, tagList);
+
+        console.log(newTags);
+        return newTags;
+    } catch (error) {
+        console.error('ERROR inside createTags', error)
+        throw error
+    }
+};
+
+
+
+
 module.exports = {
     client,
     getAllUsers, 
@@ -179,5 +214,6 @@ module.exports = {
     getAllPosts,
     updatePost, 
     getPostsByUser,
-    getUserById
+    getUserById,
+    createTags
 };
