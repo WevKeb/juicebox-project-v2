@@ -2,17 +2,24 @@ const {
     client,
     getAllUsers, 
     createUser,
-    updateUser
+    updateUser,
+    createPost,
+    getAllPosts,
+    updatePost,
+    getPostsByUser,
+    getUserById
 } = require('./index');
 
 
 const dropTables = async () => {
     try {
         await client.query(`
+        DROP TABLE IF EXISTS posts;
         DROP TABLE IF EXISTS users;
-        `)
+        `);
     } catch (error) {
-        console.error('ERROR in dropTables');
+        console.error('ERROR in dropTables', error);
+        throw error;
     }
 };
 
@@ -27,9 +34,18 @@ const createTables = async () => {
             location VARCHAR(255) NOT NULL, 
             active BOOLEAN DEFAULT true
         );
+
+        CREATE TABLE posts (
+            id SERIAL PRIMARY KEY,
+            "authorId" INTEGER REFERENCES users(id) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            content TEXT NOT NULL, 
+            active BOOLEAN DEFAULT true
+        );
         `);
     } catch (error) {
-        console.error('ERROR in createTables');
+        console.error('ERROR in createTables', error);
+        throw error;
     }
 };
 
@@ -64,7 +80,40 @@ const createInitialUsers = async () => {
 
         console.log('Finished creating initial users')
     } catch (error) {
-        console.error('ERROR in createInitialUsers');
+        console.error('ERROR in createInitialUsers', error);
+        throw error;
+    }
+};
+
+// here we create initial posts for our initial users 
+const createInitialPosts = async () => {
+    try {
+        console.log('Beginning to create initial posts...');
+
+        // destructure the returned users from array from getAllUsers, assign each object by their name cause we know they are returned in that order
+        [albert, sandra, glamgal] = await getAllUsers();
+        
+        await createPost({
+            authorId: albert.id, 
+            title: 'Dogs are the best!', 
+            content: 'This post is all about dogs, I love dogs so much!'
+        });
+
+        await createPost({
+            authorId: sandra.id, 
+            title: 'Cats are the best!', 
+            content: 'This post is all about cats, I love cats so much!'
+        });
+
+        await createPost({
+            authorId: glamgal.id, 
+            title: 'Birds are the best!', 
+            content: 'This post is all about birds, I love birds so much!'
+        });
+
+        console.log('Finished creating initial posts!');
+    } catch (error) {
+        console.error('ERROR in createInitialPosts', error)
         throw error;
     }
 };
@@ -77,9 +126,10 @@ try {
     await dropTables();
     await createTables();
     await createInitialUsers();
+    await createInitialPosts();
     // await updateUser(1, {name: 'Kevin', location: 'River West'});
 } catch (error) {
-    console.error('ERROR in rebuildDB');
+    console.error('ERROR in rebuildDB', error);
     throw error;
 }
 }
@@ -94,18 +144,37 @@ const testDB = async () => {
         const allUsers = await getAllUsers();
         console.log('this is allUsers = ', allUsers);
 
-        // allUsers returns array of all users, this test takes the id off the first user in teh array (albert in this case), passes it as a parameter and also an object with the values we want to update to the update user funciton in index.js
+        console.log('calling getUsersById...')
+        const newUser = await getUserById(1);
+        console.log('this is getUserById with their posts attached = ', newUser);
+
+        // allUsers returns array of all users, this test takes the id off the first user in the array (albert in this case), passes it as a parameter and also an object with the values we want to update to the update user funciton in index.js. same idea with update Posts
+
         console.log('calling updateUser on allUsers[0]');
         const updateUserResult = await updateUser(allUsers[0].id, {
             name: 'Kevin', 
             location: 'River West'
         });
-        
         console.log('result of update user = ', updateUserResult);
+
+        console.log('calling getAllPosts...');
+        const allPosts = await getAllPosts();
+        console.log('this is result for allPosts =', allPosts);
+
+        console.log('calling getPostsByUser on allUsers[0]...');
+        const userPosts = await getPostsByUser(allUsers[0].id);
+        console.log('this is result for postsByUser =', userPosts);
+
+        console.log('calling updatePost on allPosts[0]...');
+        const updatedPostResult = await updatePost(allPosts[0].id, {
+            title: 'Dogs actually stink!',
+            content: 'I changed my mind, dogs stink! '
+        });
+        console.log('this is result for updatePosts', updatedPostResult);
 
         console.log('Finished testing the database!')
     } catch (error) {
-        console.error(('ERROR in testDB'));
+        console.error('ERROR in testDB', error);
     }
 };
 
@@ -115,7 +184,7 @@ const init = async () => {
         await testDB();
 
     } catch (error) {
-        console.error('ERROR in init')
+        console.error('ERROR in init', error)
     } finally {
         client.end();
     }
