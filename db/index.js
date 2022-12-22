@@ -112,14 +112,15 @@ const createPost = async (
     // createPost by destructuring the object that was passed as parameter with the valuee we need to passinto the dependency array to be used in our SQL query 
 ) => {
     try {
-        const {rows: [newPost]} = await client.query(`
-        INSERT INTO posts("authorId", title, content)
-        VALUES ($1, $2, $3)
-        RETURNING *;
+        const { rows: [ post ] } = await client.query(`
+          INSERT INTO posts("authorId", title, content) 
+          VALUES($1, $2, $3)
+          RETURNING *;
         `, [authorId, title, content]);
-
-        // console.log('this is the newPost', newPost);
-        return newPost;
+    
+        const tagList = await createTags(tags);
+    
+        return await addTagsToPost(post.id, tagList);
     } catch (error) {
         console.error('ERROR in createPost', error)
         throw error;
@@ -145,20 +146,50 @@ const getAllPosts = async () => {
 };
 
 // gonna get object with title and content on it
-const updatePost = async (id, fields = {}) => {
-    const keys = Object.keys(fields); 
-    
-    const setString = keys.map((key, index) => `${key} = $${index + 1}`);
-    try {
-        const {rows: updatedPost} = await client.query(`
-        UPDATE posts
-        SET ${setString}
-        WHERE id = ${id}
-        RETURNING *;
-        `, Object.values(fields));
+const updatePost = async (postId, fields = {}) => {
+     // read off the tags & remove that field 
+  const { tags } = fields; // might be undefined
+  delete fields.tags;
 
-        // console.log(updatedPost);
-        return updatedPost;
+  // build the set string
+  const setString = Object.keys(fields).map(
+    (key, index) => `"${ key }"=$${ index + 1 }`
+  ).join(', ');
+
+  try {
+    // update any fields that need to be updated
+    if (setString.length > 0) {
+      await client.query(`
+        UPDATE posts
+        SET ${ setString }
+        WHERE id=${ postId }
+        RETURNING *;
+      `, Object.values(fields));
+    }
+
+    // return early if there's no tags to update
+    if (tags === undefined) {
+      return await getPostById(postId);
+    }
+
+    // make any new tags that need to be made
+    const tagList = await createTags(tags);
+    const tagListIdString = tagList.map(
+      tag => `${ tag.id }`
+    ).join(', ');
+
+    // delete any post_tags from the database which aren't in that tagList
+    await client.query(`
+      DELETE FROM post_tags
+      WHERE "tagId"
+      NOT IN (${ tagListIdString })
+      AND "postId"=$1;
+    `, [postId]);
+
+    // and create post_tags as necessary
+    await addTagsToPost(postId, tagList);
+
+    return await getPostById(postId);
     } catch (error) {
         console.error('ERROR in getUpdatePsts', error)
         throw error
@@ -308,7 +339,23 @@ async function createPostTag(postId, tagId) {
     }
   };
 
- 
+//   async function getPostsByTagName(tagName) {
+//     try {
+//       const { rows: postIds } = await client.query(`
+//         SELECT posts.id
+//         FROM posts
+//         JOIN post_tags ON posts.id=post_tags."postId"
+//         JOIN tags ON tags.id=post_tags."tagId"
+//         WHERE tags.name=$1;
+//       `, [tagName]);
+  
+//       return await Promise.all(postIds.map(
+//         post => getPostById(post.id)
+//       ));
+//     } catch (error) {
+//       throw error;
+//     }
+//   }; 
 
 module.exports = {
     client,
@@ -322,5 +369,6 @@ module.exports = {
     getUserById,
     createTags,
     selectCreatedTags,
-    addTagsToPost
+    addTagsToPost,
+    // getPostsByTagName
 };

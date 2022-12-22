@@ -10,7 +10,7 @@ const {
     getUserById, 
     createTags,
     addTagsToPost, 
-
+    // getPostsByTagName
 } = require('./index');
 
 
@@ -170,6 +170,8 @@ const createInitialPosts = async () => {
 // };
 
 // here we reuibld our DB
+
+
 const rebuildDB = async () => {
 try {
     client.connect();
@@ -196,18 +198,18 @@ const testDB = async () => {
         const allUsers = await getAllUsers();
         console.log('this is allUsers = ', allUsers);
 
-        // console.log('calling getUsersById...')
-        // const newUser = await getUserById(1);
-        // console.log('this is getUserById with their posts attached = ', newUser);
+        console.log('calling getUsersById...')
+        const newUser = await getUserById(1);
+        console.log('this is getUserById with their posts attached = ', newUser);
 
         // // allUsers returns array of all users, this test takes the id off the first user in the array (albert in this case), passes it as a parameter and also an object with the values we want to update to the update user funciton in index.js. same idea with update Posts
 
-        // console.log('calling updateUser on allUsers[0]');
-        // const updateUserResult = await updateUser(allUsers[0].id, {
-        //     name: 'Kevin', 
-        //     location: 'River West'
-        // });
-        // console.log('result of update user = ', updateUserResult);
+        console.log('calling updateUser on allUsers[0]');
+        const updateUserResult = await updateUser(allUsers[0].id, {
+            name: 'Kevin', 
+            location: 'River West'
+        });
+        console.log('result of update user = ', updateUserResult);
 
         console.log('calling getAllPosts...');
         const allPosts = await getAllPosts();
@@ -232,7 +234,14 @@ const testDB = async () => {
         // const selectedTags = await selectInsertedTags(tagList);
         // console.log('this is result for selectInsertedTags =', selectedTags);
 
-        
+        console.log("Calling updatePost on posts[1], only updating tags");
+        const updatePostTagsResult = await updatePost(allPosts[1].id, {
+        tags: ["#youcandoanything", "#redfish", "#bluefish"]});
+        console.log("Result:", updatePostTagsResult);
+
+        // console.log("Calling getPostsByTagName with #happy");
+        // const postsWithHappy = await getPostsByTagName("#happy");
+        // console.log("Result:", postsWithHappy);
 
         console.log('Finished testing the database!')
     } catch (error) {
