@@ -9,10 +9,10 @@ const {
     getPostsByUser,
     getUserById, 
     createTags,
+    addTagsToPost, 
 
 } = require('./index');
 
-const tagList = ["#first", "#best", "#glory-days"];
 
 
 const dropTables = async () => {
@@ -55,8 +55,9 @@ const createTables = async () => {
         );
 
         CREATE TABLE post_tags (
-            "postId" INTEGER REFERENCES posts(id) UNIQUE,
-            "tagId" INTEGER REFERENCES tags(id) UNIQUE 
+            "postId" INTEGER REFERENCES posts(id),
+            "tagId" INTEGER REFERENCES tags(id), 
+            UNIQUE("postId", "tagId")
         );
         `);
     } catch (error) {
@@ -112,19 +113,22 @@ const createInitialPosts = async () => {
         await createPost({
             authorId: albert.id, 
             title: 'Dogs are the best!', 
-            content: 'This post is all about dogs, I love dogs so much!'
+            content: 'This post is all about dogs, I love dogs so much!',
+            tags: ["#happy", "#youcandoanything"]
         });
 
         await createPost({
             authorId: sandra.id, 
             title: 'Cats are the best!', 
-            content: 'This post is all about cats, I love cats so much!'
+            content: 'This post is all about cats, I love cats so much!',
+            tags: ["#happy", "#worst-day-ever"]
         });
 
         await createPost({
             authorId: glamgal.id, 
             title: 'Birds are the best!', 
-            content: 'This post is all about birds, I love birds so much!'
+            content: 'This post is all about birds, I love birds so much!',
+            tags: ["#happy", "#youcandoanything", "#canmandoeverything"]
         });
 
         console.log('Finished creating initial posts!');
@@ -134,15 +138,36 @@ const createInitialPosts = async () => {
     }
 };
 
-const createInitialTags = async () => {
-    console.log('Beginning to create tags...');
+// const createInitialTags = async () => {
+//     try {
+//     console.log('Beginning to create tags...');
     
-    const createdTags = await createTags(tagList);
-    console.log('this is created and then selected tags', createdTags)
-    console.log('Finished creating tags');
+//     const [happy, sad, inspo, catman] = await createTags([
+//         '#happy', 
+//         '#worst-day-ever', 
+//         '#youcandoanything',
+//         '#catmandoeverything'
+//       ]);
+//       console.log([happy, inspo]);
+// // ^ this correctly returns an array of the new tags created, we destructure them and assign them to variables as an object with id, name on it
 
-    return createdTags;
-};
+//       const [postOne, postTwo, postThree] = await getAllPosts();
+//     //   console.log(postOne.id);
+// // ^ do same thing with posts, assign returned posts array to variables as individual objects with post assigned to them
+
+//     const postWithTags = await addTagsToPost(postOne.id, [happy, inspo]);
+// // console.log(postWithTags);
+//     const postWithTags2 = await addTagsToPost(postTwo.id, [sad, inspo]);
+// // console.log(postWithTags2);
+//     const postWithTags3 = await addTagsToPost(postThree.id, [happy, catman, inspo]);
+// // console.log(postWithTags3);
+    
+//     // console.log("Finished creating tags!");
+//     } catch (error) {
+//         console.error('ERROR in createInitialTags', error)
+//         throw error;
+//     };
+// };
 
 // here we reuibld our DB
 const rebuildDB = async () => {
@@ -153,13 +178,13 @@ try {
     await createTables();
     await createInitialUsers();
     await createInitialPosts();
-    await createInitialTags();
+    // await createInitialTags();
     // await updateUser(1, {name: 'Kevin', location: 'River West'});
 } catch (error) {
     console.error('ERROR in rebuildDB', error);
     throw error;
 }
-}
+};
 
 
 const testDB = async () => {
@@ -167,9 +192,9 @@ const testDB = async () => {
         console.log('Beginning to test the database...')
         
         
-        // console.log('calling allUsers...')
-        // const allUsers = await getAllUsers();
-        // console.log('this is allUsers = ', allUsers);
+        console.log('calling allUsers...')
+        const allUsers = await getAllUsers();
+        console.log('this is allUsers = ', allUsers);
 
         // console.log('calling getUsersById...')
         // const newUser = await getUserById(1);
@@ -184,13 +209,13 @@ const testDB = async () => {
         // });
         // console.log('result of update user = ', updateUserResult);
 
-        // console.log('calling getAllPosts...');
-        // const allPosts = await getAllPosts();
-        // console.log('this is result for allPosts =', allPosts);
+        console.log('calling getAllPosts...');
+        const allPosts = await getAllPosts();
+        console.log('this is result for allPosts =', allPosts);
 
-        // console.log('calling getPostsByUser on allUsers[0]...');
-        // const userPosts = await getPostsByUser(allUsers[0].id);
-        // console.log('this is result for postsByUser =', userPosts);
+        console.log('calling getPostsByUser on allUsers[0]...');
+        const userPosts = await getPostsByUser(allUsers[0].id);
+        console.log('this is result for postsByUser =', userPosts);
 
         // console.log('calling updatePost on allPosts[0]...');
         // const updatedPostResult = await updatePost(allPosts[0].id, {
