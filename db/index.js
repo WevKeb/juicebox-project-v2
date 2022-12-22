@@ -176,8 +176,7 @@ const getPostsByUser = async (userId) => {
 
 // ***************** Below is all Tags functions *********************
 
-//the immediate function below is a working function that creates initial tags passed from our seed.js and adds tehm to our tags table in the DB 
-// i think tagList will be an array of strings with the tagnames 
+//the immediate function below is a working function that creates initial tags passed from our seed.js and then selectes and returns those tags just inserted
 const createTags = async (tagList) => {
     // console.log('this is our taglist ==> ',tagList);
     if (tagList.length === 0) {
@@ -194,11 +193,11 @@ const createTags = async (tagList) => {
         INSERT INTO tags(name)
         VALUES ${insertValues}
         ON CONFLICT (name) DO NOTHING
-        RETURNING *;
         `, tagList);
 
-        console.log('this is newTags ------->', newTags);
-        return newTags;
+        // console.log('this is newTags ------->', newTags);
+        return selectCreatedTags(tagList);
+        // return the just inserted tags using a selectInserted tags function below
     } catch (error) {
         console.error('ERROR inside createTags', error)
         throw error
@@ -207,7 +206,7 @@ const createTags = async (tagList) => {
 
 
 // this selects the passed array of tags that were just inserted in teh function above. couldn't get them to work in a single function 
-const selectInsertedTags = async (tagList) => {
+async function selectCreatedTags(tagList) {
     if (tagList.length === 0) {
         return;
     }
@@ -216,7 +215,6 @@ const selectInsertedTags = async (tagList) => {
         (tag, index) => `$${index + 1}`).join(', ');
 
     // console.log('this is selectValues ---->', selectValues);
-
     try {
         const {rows: selectedTags} = await client.query(`
         SELECT * FROM tags
@@ -224,53 +222,18 @@ const selectInsertedTags = async (tagList) => {
         IN (${selectValues});
         `, tagList) 
 
-        // console.log('selectedTags ----->', selectedTags);
+        console.log('selectedTags ----->', selectedTags);
         return selectedTags;
+        // ^ this returns array of tag objects with tag.id and tag.name 
     } catch (error) {
         console.error('ERROR in selectTags', error)
         throw error
     };
 };
 
+// ***************** Below is all Tags functions *********************
 
 
-// this is my attempt at getting a single createTags list function to both insert and select the passed values in tagList. I was unsuccessful, tried a few different syntax versions. I commonly got the error "error: cannot insert multiple commands into a prepared statement"
-
-// const createTags = async (tagList) => {
-//     // console.log('this is our taglist ==> ',tagList);
-//     if (tagList.length === 0) {
-//         return;
-//     }
-
-//     const insertValues = tagList.map(
-//         (tag, index) => `($${index + 1})`
-//     );
-//     const selectValues = tagList.map(
-//         (tag, index) => `$${index + 1}`).join(', ');
-
-
-//     // console.log('this is selectValues ---->', selectValues);
-//     // console.log('this is insertValues------->', insertValues);
-//     try {
-//         const {rows: selectedTags} = await client.query(`
-//         INSERT INTO tags(name)
-//         VALUES ${insertValues}
-//         ON CONFLICT (name) DO NOTHING;
-        
-//         SELECT * FROM tags
-//         WHERE name 
-//         IN (${selectValues});
-//         `, tagList);
-
-//         // console.log('this is newTags ------->', newTags);
-//         // return newTags;
-//         console.log('selectedTags ----->', selectedTags);
-//         return selectedTags;
-//     } catch (error) {
-//         console.error('ERROR inside createTags', error)
-//         throw error
-//     }
-// };
 
 module.exports = {
     client,
@@ -283,5 +246,6 @@ module.exports = {
     getPostsByUser,
     getUserById,
     createTags,
-    selectInsertedTags
+    selectCreatedTags,
+   
 };

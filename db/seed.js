@@ -9,7 +9,7 @@ const {
     getPostsByUser,
     getUserById, 
     createTags,
-    selectInsertedTags
+
 } = require('./index');
 
 const tagList = ["#first", "#best", "#glory-days"];
@@ -137,9 +137,11 @@ const createInitialPosts = async () => {
 const createInitialTags = async () => {
     console.log('Beginning to create tags...');
     
-    await createTags(tagList);
- 
+    const createdTags = await createTags(tagList);
+    console.log('this is created and then selected tags', createdTags)
     console.log('Finished creating tags');
+
+    return createdTags;
 };
 
 // here we reuibld our DB
@@ -201,9 +203,11 @@ const testDB = async () => {
         // const newTags = await createTags();
         // console.log('this is result for createTags =', newTags);
 
-        console.log('calling selectInsertedTags...');
-        const selectedTags = await selectInsertedTags(tagList);
-        console.log('this is result for selectInsertedTags =', selectedTags);
+        // console.log('calling selectInsertedTags...');
+        // const selectedTags = await selectInsertedTags(tagList);
+        // console.log('this is result for selectInsertedTags =', selectedTags);
+
+        
 
         console.log('Finished testing the database!')
     } catch (error) {
