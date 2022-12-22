@@ -8,8 +8,11 @@ const {
     updatePost,
     getPostsByUser,
     getUserById, 
-    createTags
+    createTags,
+    selectInsertedTags
 } = require('./index');
+
+const tagList = ["#first", "#best", "#glory-days"];
 
 
 const dropTables = async () => {
@@ -134,14 +137,8 @@ const createInitialPosts = async () => {
 const createInitialTags = async () => {
     console.log('Beginning to create tags...');
     
-    await createTags(["#first", "#best", "#glory-days"]);
-    
-    // try { 
-
-    // } catch (error) {
-    //     console.error('ERROR in createInitialTags', error)
-    //     throw error;
-    // }
+    await createTags(tagList);
+ 
     console.log('Finished creating tags');
 };
 
@@ -200,9 +197,13 @@ const testDB = async () => {
         // });
         // console.log('this is result for updatePosts', updatedPostResult);
 
-    //     console.log('calling createTags...');
-    //     const newTags = await createTags();
-    //     console.log('this is result for createTags =', newTags);
+        // console.log('calling createTags...');
+        // const newTags = await createTags();
+        // console.log('this is result for createTags =', newTags);
+
+        console.log('calling selectInsertedTags...');
+        const selectedTags = await selectInsertedTags(tagList);
+        console.log('this is result for selectInsertedTags =', selectedTags);
 
         console.log('Finished testing the database!')
     } catch (error) {
