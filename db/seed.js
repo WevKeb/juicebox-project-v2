@@ -10,7 +10,7 @@ const {
     getUserById, 
     createTags,
     addTagsToPost, 
-    // getPostsByTagName
+    getPostsByTagName
 } = require('./index');
 
 
@@ -239,9 +239,9 @@ const testDB = async () => {
         tags: ["#youcandoanything", "#redfish", "#bluefish"]});
         console.log("Result:", updatePostTagsResult);
 
-        // console.log("Calling getPostsByTagName with #happy");
-        // const postsWithHappy = await getPostsByTagName("#happy");
-        // console.log("Result:", postsWithHappy);
+        console.log("Calling getPostsByTagName with #happy");
+        const postsWithHappy = await getPostsByTagName("#happy");
+        console.log("Result:", postsWithHappy);
 
         console.log('Finished testing the database!')
     } catch (error) {
