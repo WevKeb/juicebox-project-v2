@@ -249,6 +249,18 @@ const createTags = async (tagList) => {
     }
 };
 
+async function getAllTags() {
+  try {
+    const {rows} = await client.query(`
+      SELECT * FROM tags;
+    `)
+    return rows;
+
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 // this selects the passed array of tags that were just inserted in teh function above. couldn't get them to work in a single function 
 async function selectCreatedTags(tagList) {
@@ -370,5 +382,6 @@ module.exports = {
     createTags,
     selectCreatedTags,
     addTagsToPost,
-    getPostsByTagName
+    getPostsByTagName,
+    getAllTags
 };
