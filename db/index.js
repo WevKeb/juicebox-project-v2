@@ -100,6 +100,19 @@ const getUserById = async (userId) => {
     return user;
 }
 
+async function getUserByUsername(username) {
+  try {
+    const { rows: [user] } = await client.query(`
+      SELECT *
+      FROM users
+      WHERE username=$1;
+    `, [username]);
+
+    return user;
+  } catch (error) {
+    throw error;
+  }
+}
 
 // ***************** Below is all Posts functions *********************
 
@@ -324,7 +337,9 @@ async function getPostById(postId) {
 
   // pass the
 async function addTagsToPost(postId, tagList) {
-    try {
+  console.log(tagList);  
+  
+  try {
       const createPostTagPromises = tagList.map(
         tag => createPostTag(postId, tag.id)
       );
@@ -383,5 +398,6 @@ module.exports = {
     selectCreatedTags,
     addTagsToPost,
     getPostsByTagName,
-    getAllTags
+    getAllTags, 
+    getUserByUsername, 
 };
